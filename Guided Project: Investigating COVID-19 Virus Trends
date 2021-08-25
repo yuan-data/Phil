@@ -1,0 +1,136 @@
+---
+title:  "Data Structures in R: Investigating COVID-19 Virus Trends"
+author: "Phil.cn"
+date:   "8/25/2021"
+--- 
+
+
+##################################################################
+##################################################################
+
+## Loading the dataset
+## and Storing in variable "covid_df"
+library( readr )
+covid_df <- read_csv( "covid19.csv" )
+
+
+## Determining the dimension of the dataset
+dim( covid_df )
+
+
+## Determining the column names of the dataset
+## and Storing in variable "vector_cols"
+vector_cols <- colnames( covid_df )
+
+
+## Displaying the first few rows of the dataset
+head( covid_df )
+
+
+## Displaying the summary of the dataset
+## Having a global view and getting familiar with the dataset
+library(tidyverse)
+glimpse( covid_df )
+
+
+##################################################################
+##################################################################
+
+## Filter the "All States" from Province states 
+## and remove the `Province_State` column
+covid_df_all_states <- covid_df %>%
+       filter( Province_State == "All States") %>% 
+       select(-Province_State)
+
+
+## Select the columns related to the daily measures
+## and store in variable covid_df_all_states_daily
+covid_df_all_states_daily <- covid_df_all_states %>%
+                             select(Date, 
+                                    Country_Region, 
+                                    active, 
+                                    hospitalizedCurr, 
+                                    daily_tested, 
+                                    daily_positive)
+head(covid_df_all_states_daily)
+
+
+##################################################################
+##################################################################
+
+## Computing the sum of some cols
+## and grouped by the Country_Region column
+covid_df_all_states_daily_sum <- covid_df_all_states_daily %>%
+             group_by( Country_Region )%>%
+             summarise( tested = sum( daily_tested ),
+                        positive = sum( daily_positive ),
+                        active = sum( active ),
+                        hospitalized = sum( hospitalizedCurr )) %>%
+             arrange( -tested )
+
+## Taking the top 10 
+covid_top_10 <- head( covid_df_all_states_daily_sum, 10 )
+
+##################################################################
+##################################################################
+
+## Create the some vectors from covid_top_10
+countries <- covid_top_10$Country_Region
+tested_cases <- covid_top_10$tested
+positive_cases <- covid_top_10$positive
+active_cases <- covid_top_10$active
+hospitalized_cases <- covid_top_10$hospitalized
+
+## Naming the previous vectors
+names(tested_cases) <- countries
+names(positive_cases) <- countries
+names(active_cases) <- countries
+names(hospitalized_cases) <- countries
+
+##Identify the top three positive against tested cases
+positive_tested_top_3 <- covid_top_10 %>%
+                 mutate( ratio = positive_cases / tested_cases ) %>%
+                 arrange( -ratio ) %>%
+                 top_n(3)
+
+
+##################################################################
+##################################################################
+
+## Creating the following vectors from related data 
+united_kingdom <- c(0.11, 1473672, 166909, 0, 0)
+united_states <- c(0.10, 17282363, 1877179, 0, 0)
+turkey <- c(0.08, 2031192, 163941, 2980960, 0)
+
+## Creating a matrix combining the above vectors and rename them
+covid_mat <- rbind( united_kingdom, united_states, turkey )
+colnames(covid_mat) <- c("Ratio", "tested", "positive", "active", "hospitalized")
+
+
+##################################################################
+##################################################################
+
+## Putting all together
+question <- "Which countries have had the highest number of positive cases against the number of tests?"
+answer <- c("Positive tested cases" = positive_tested_top_3)
+
+#Dataframes: covid_df, covid_df_all_states, covid_df_all_states_daily, and covid_top_10.
+#Matrix: covid_mat.
+#Vectors: vector_cols and countries.
+
+## Create a list that contains the data structures mentioned above
+datasets_dataframe <- list(covid_df,
+                           covid_df_all_states,
+                           covid_df_all_states_daily,
+                           covid_top_10)
+
+matrics <- list(covid_mat)
+
+vectors <- list(vector_cols, countries)
+
+data_structure_list <- list( "data_frame" = datasets_dataframe,
+                             "matrix" = matrics,
+                             "vector" = vectors 
+                           )
+
+covid_analysis_list <- list(question, answer, data_structure_list)
